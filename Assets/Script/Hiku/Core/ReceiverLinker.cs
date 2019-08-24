@@ -46,7 +46,7 @@ namespace Hiku.Core
                 if (member == null)
                 {
                     // The default behaviour
-                    creators.Add(new ReceiverCreator(d.Method, d.Type, d.Type));
+                    creators.Add(new ReceiverCreator(d));
                 }
                 else
                 {
@@ -68,7 +68,7 @@ namespace Hiku.Core
 
                     if (string.IsNullOrEmpty(member.Path))
                     {
-                        creators.Add(new ReceiverCreator(d.Method, d.Type, type));
+                        creators.Add(new ReceiverCreator(d, type));
                     }
                     else
                     {
@@ -76,7 +76,7 @@ namespace Hiku.Core
                         try
                         {
                             var path = member.Path.Split('/');
-                            creators.Add(new ReceiverCreator(d.Method, d.Type, type, GetterChainCall.Construct(type, path)));
+                            creators.Add(new ReceiverCreator(d, type, GetterChainCall.Construct(type, path)));
                         }
                         catch (Exception e)
                         {
@@ -91,12 +91,14 @@ namespace Hiku.Core
 
         public Receivers Build(MonoBehaviour target)
         {
+            // May happen if never inspected in editor
+            if (Members == null)
+                Members = new List<ReceiverLinkerItem>();
+
             var key = new ReceiversCreatorKey(target.GetType(), this);
             ReceiversCreator creator;
             if (!CreatorCache.TryGetValue(key, out creator))
                 CreatorCache.Add(key, creator = BuildCreator(target));
-            else
-                Debug.LogWarning("Reused creator for " + target.GetType());
             return creator.Create(target);
         }
     }

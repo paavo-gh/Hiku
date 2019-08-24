@@ -25,19 +25,25 @@ namespace Hiku.Core
 
         private static (IDataProviderObject, Provider)? findProvider(MonoBehaviour owner, Type type)
         {
-            var providerList = new List<IDataProviderObject>();
+            var providerList = new List<MonoBehaviour>();
             for (var t = owner.transform; t != null; t = t.parent)
             {
-                t.GetComponents<IDataProviderObject>(providerList);
+                t.GetComponents(providerList);
                 for (int i = 0; i < providerList.Count; i++)
                 {
+                    // To avoid potential loops, disallow inherting from components 
+                    // that are below the owner. 
                     if (object.ReferenceEquals(providerList[i], owner))
-                        continue;
+                        break;
                     
-                    foreach (var provider in providerList[i].GetProviders().All)
+                    var obj = providerList[i] as IDataProviderObject;
+                    if (obj != null)
                     {
-                        if (type.IsAssignableFrom(provider.Type))
-                            return (providerList[i], provider);
+                        foreach (var provider in obj.GetProviders().All)
+                        {
+                            if (type.IsAssignableFrom(provider.Type))
+                                return (obj, provider);
+                        }
                     }
                 }
                 providerList.Clear();

@@ -1,7 +1,4 @@
 
-using System;
-using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 using Hiku.Core;
 
@@ -12,13 +9,26 @@ namespace Hiku
     /// </summary>
     public abstract class ProviderReceiverComponent : ProviderComponent, IDataProviderObject
     {
-        [SerializeField] ReceiverLinker linker;
+        [SerializeField] ReceiverLinker linker = null;
         Receivers receivers;
 
-        protected override void Awake()
+        protected override sealed void Init()
         {
-            base.Awake();
             receivers = linker.Build(this);
+            receivers.SetRegistered(true);
+            base.Init();
+        }
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            receivers.SetRegistered(true);
+        }
+
+        protected override void OnDisable()
+        {
+            receivers.SetRegistered(false);
+            base.OnDisable();
         }
 
         protected virtual void OnDestroy() => receivers?.Dispose();

@@ -7,9 +7,7 @@ using System.Linq.Expressions;
 namespace Hiku.Core
 {
     /// <summary>
-    /// Caches the process of creating receivers from Unity components to 
-    /// avoid the need to do that separately each time a type of component 
-    /// is instantiated.
+    /// Caches the process of creating receivers from Unity components.
     /// </summary>
     public class ReceiversCreator
     {
@@ -21,11 +19,7 @@ namespace Hiku.Core
         {
             var receivers = new Receivers();
             foreach (var creator in creators)
-            {
-                var receiver = creator.CreateReceiver(target);
-                if (receiver != null)
-                    receivers.Receive(receiver);
-            }
+                creator.CreateReceiver(target, receivers);
             return receivers;
         }
     }
@@ -36,29 +30,30 @@ namespace Hiku.Core
         Type methodType;
         MethodInfo method;
         GetterChainCall getters;
+        public readonly Receive Attribute;
 
-        public ReceiverCreator(MethodInfo method, Type methodType, Type type, GetterChainCall getters = null)
+        public ReceiverCreator(ReceiverMethod receiverMethod, Type type = null, GetterChainCall getters = null)
         {
-            this.type = type;
-            this.methodType = methodType;
-            this.method = method;
+            this.type = type ?? receiverMethod.Type;
+            this.methodType = receiverMethod.Type;
+            this.method = receiverMethod.Method;
             this.getters = getters;
+            this.Attribute = receiverMethod.Attribute;
         }
 
-        public DataReceiver CreateReceiver(MonoBehaviour target)
+        public void CreateReceiver(MonoBehaviour target, ReceiverBuilder receivers)
         {
             var provider = ReceiverComponentBuilder.FindProvider(target, type);
             if (provider != null)
-                return DelegateReceiver.Create(provider, this, target);
-            return null;
+                DelegateReceiverCreator.Create(provider, this, target, receivers);
         }
 
-        public Action<T> CreateDelegate<T>(object target)
+        public Action<T> CreateDelegate<T>(object target, ReceiverBuilder receivers)
         {
             var d = method.CreateDelegate(Expression.GetActionType(methodType), target);
 
             if (getters != null)
-                return getters.Wrap<T>(d);
+                return getters.Wrap<T>(d, receivers);
 
             try
             {
@@ -73,43 +68,81 @@ namespace Hiku.Core
         }
     }
 
-    public class DelegateReceiver : DataReceiver
+    public class DelegateReceiverCreator : ProviderListener
     {
-        private Delegate listener;
-        private Provider provider;
+        ReceiverCreator receiverCreator;
+        object target;
+        ReceiverBuilder receivers;
 
-        private DelegateReceiver() {}
-
-        public static DelegateReceiver Create(Provider provider, ReceiverCreator listenerProvider, object target)
+        private DelegateReceiverCreator(ReceiverCreator receiverCreator, object Target, ReceiverBuilder receivers)
         {
-            var listener = provider.AddListener(new DelegateProviderImpl
-            {
-                ListenerProvider = listenerProvider,
-                Target = target
-            });
-            if (listener == null)
-                return null;
-            return new DelegateReceiver
-            {
-                listener = listener,
-                provider = provider
-            };
+            this.receiverCreator = receiverCreator;
+            this.target = Target;
+            this.receivers = receivers;
         }
 
-        public void Dispose()
+        void ProviderListener.RegisterWith<T>(Provider<T> provider)
         {
-            provider.RemoveListener(listener);
-        }
-
-        public struct DelegateProviderImpl : DelegateProvider
-        {
-            public ReceiverCreator ListenerProvider;
-            public object Target;
-
-            public Action<T> GetDelegate<T>()
+            var action = receiverCreator.CreateDelegate<T>(target, receivers);
+            if (action != null)
             {
-                return ListenerProvider.CreateDelegate<T>(Target);
+                var delegateReceiver = new DelegateReceiver<T>(action);
+                receivers.Receive(delegateReceiver);
+                delegateReceiver.Register(provider);
             }
         }
+
+        public static void Create(Provider provider, ReceiverCreator receiverCreator, object target, ReceiverBuilder receivers)
+        {
+            var delegateProvider = new DelegateReceiverCreator(receiverCreator, target, receivers);
+            provider.Register(delegateProvider);
+        }
+    }
+
+    public class DelegateReceiver<T> : DataReceiver
+    {
+        T value;
+        Action<T> delegateMethod;
+        bool registered;
+        bool pendingValue;
+
+        Provider<T> provider;
+
+        public DelegateReceiver(Action<T> delegateMethod)
+        {
+            this.delegateMethod = delegateMethod;
+        }
+
+        public void Register(Provider<T> provider)
+        {
+            if (this.provider != null)
+                this.provider.Listeners -= ValueChanged;
+
+            this.provider = provider;
+            provider.Listeners += ValueChanged;
+        }
+
+        void ValueChanged(T val)
+        {
+            if (registered)
+                delegateMethod(val);
+            else
+            {
+                pendingValue = true;
+                value = val;
+            }
+        }
+
+        public void SetRegistered(bool registered)
+        {
+            this.registered = registered;
+            if (registered && pendingValue)
+            {
+                pendingValue = false;
+                delegateMethod(value);
+            }
+        }
+
+        void DataReceiver.Dispose() => provider.Listeners -= ValueChanged;
     }
 }

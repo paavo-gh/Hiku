@@ -225,6 +225,11 @@ namespace Hiku.Editor
 
             if (memberType.GetCustomAttribute<Receivable>() == null)
                 return;
+            if (memberType.IsValueType)
+            {
+                Debug.LogWarning($"Struct {memberType.GetFriendlyName()} has been marked [{nameof(Receivable)}] but that is not supported");
+                return;
+            }
             
             foreach (var method in memberType.GetMethods())
             {

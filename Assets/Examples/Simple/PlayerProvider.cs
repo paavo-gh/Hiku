@@ -5,15 +5,15 @@ namespace Hiku.Examples.Simple
     public class PlayerProvider : ProviderComponent, IPlayerService
     {
         // Values of these DataFields are provided to all child objects expecting such a type
-        DataField<Player> player;
-        DataField<IPlayerService> playerService;
+        DataField<Player> player = null;
+        DataField<IPlayerService> playerService = null;
 
         // There is also Channel<T> that does the same as DataField without storing the value
 
         // Initialize is called before any data is provided by the component
-        protected override void Initialize()
+        protected override void Create()
         {
-            player.Set(new Player { Id = "2342374" });
+            player.Set(new Player { Id = "234237" });
             playerService.Set(this);
         }
 

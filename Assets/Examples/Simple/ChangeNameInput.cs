@@ -9,7 +9,7 @@ namespace Hiku.Examples.Simple
         // Receives value from a parent object
         IPlayerService playerService { get; [Receive] set; }
 
-        [SerializeField] TMP_InputField inputField;
+        [SerializeField] TMP_InputField inputField = null;
 
         void Start()
         {

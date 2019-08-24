@@ -7,18 +7,28 @@ using UnityEngine;
 
 namespace Hiku.Core
 {
-    public delegate Provider ProviderFinder(Type type);
-
     public interface DataReceiver
     {
+        void SetRegistered(bool registered);
         void Dispose();
     }
 
-    public class Receivers
+    public interface ReceiverBuilder
+    {
+        void Receive(DataReceiver receiver);
+    }
+
+    public class Receivers : ReceiverBuilder
     {
         List<DataReceiver> receivers = new List<DataReceiver>();
 
         public void Receive(DataReceiver receiver) => receivers.Add(receiver);
+
+        public void SetRegistered(bool registered)
+        {
+            for (int i = 0; i < receivers.Count; i++)
+                receivers[i].SetRegistered(registered);
+        }
 
         public void Dispose()
         {
@@ -35,12 +45,14 @@ namespace Hiku.Core
     {
         public readonly Type Type;
         public readonly MethodInfo Method;
+        public readonly Receive Attribute;
         public string Name => Method.Name;
 
-        private ReceiverMethod(MethodInfo method, Type parameterType)
+        private ReceiverMethod(MethodInfo method, Type parameterType, Receive attribute)
         {
             this.Method = method;
             this.Type = parameterType;
+            this.Attribute = attribute;
         }
 
         public static List<ReceiverMethod> GetAll(object source)
@@ -49,7 +61,8 @@ namespace Hiku.Core
 
             foreach (var method in source.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance))
             {
-                if (method.GetCustomAttribute<Receive>() != null)
+                var attribute = method.GetCustomAttribute<Receive>();
+                if (attribute != null)
                 {
                     var parameters = method.GetParameters();
                     if (parameters.Length != 1)
@@ -57,10 +70,16 @@ namespace Hiku.Core
                         Debug.LogError($"[{source.GetType().Name}] Receiver method {method.Name} has invalid number of parameters ({parameters.Length})");
                         return null;
                     }
-                    list.Add(new ReceiverMethod(method, parameters[0].ParameterType));
+                    list.Add(new ReceiverMethod(method, parameters[0].ParameterType, attribute));
                 }
             }
+
+            list.Sort(CompareByOrder);
+            
             return list;
         }
+
+        private static int CompareByOrder(ReceiverMethod x, ReceiverMethod y)
+            => x.Attribute.Order.CompareTo(y.Attribute.Order);
     }
 }
