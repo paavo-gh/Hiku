@@ -193,7 +193,8 @@ namespace Hiku.Editor
                     if (object.ReferenceEquals(provider, targetObject))
                         continue;
                     
-                    var providers = provider.GetProviders();
+                    //var providers = provider.GetProviders();
+                    var providers = Providers.Build(provider);
                     if (providers != null)
                     {
                         foreach (var dataField in providers.All)
