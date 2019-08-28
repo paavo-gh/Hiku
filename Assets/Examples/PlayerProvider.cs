@@ -1,20 +1,25 @@
-﻿
-namespace Hiku.Examples.Simple
+﻿using System;
+
+namespace Hiku.Examples
 {
     // ProviderComponents provide certain data types to their child objects
-    public class PlayerProvider : ProviderComponent, IPlayerService
+    public class PlayerProvider : ProviderComponent, IPlayerService, ITimeComponent
     {
         // Values of these DataFields are provided to all child objects expecting such a type
         DataField<Player> player = null;
         DataField<IPlayerService> playerService = null;
+        DataField<ITimeComponent> timeComponent = null;
+        DataField<DateTime> timerTest = null;
 
-        // There is also Channel<T> that does the same as DataField without storing the value
+        public DateTime CurrentTime => DateTime.UtcNow;
 
         // Initialize is called before any data is provided by the component
         protected override void Create()
         {
             player.Set(new Player { Id = "234237" });
             playerService.Set(this);
+            timeComponent.Set(this);
+            timerTest.Set(CurrentTime.AddHours(1));
         }
 
         public void ChangeName(string name)
@@ -43,5 +48,10 @@ namespace Hiku.Examples.Simple
     public interface IPlayerService
     {
         void ChangeName(string name);
+    }
+
+    public interface ITimeComponent
+    {
+        DateTime CurrentTime { get; }
     }
 }

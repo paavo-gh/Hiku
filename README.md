@@ -70,7 +70,7 @@ public class CharacterData
 
 Receivable-attribute is there to tell the editor scripts to list all the public fields of the class as receivable data.
 
-There is also ProviderReceiverComponent when you need a component that can do both.
+There is also ProviderReceiverComponent when you need a component to be both receiver and provider.
 
 ## Unity Events
 

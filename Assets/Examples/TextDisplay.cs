@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-namespace Hiku.Examples.Simple
+namespace Hiku.Examples
 {
     public class TextDisplay : ReceiverComponent
     {
