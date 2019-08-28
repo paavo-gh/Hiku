@@ -5,13 +5,15 @@ namespace Hiku
 {
     public class ReceiverComponent : MonoBehaviour
     {
-        public ReceiverLinker linker;
+        [SerializeField] ReceiverLinker linker = null;
         Receivers receivers;
 
         protected virtual void OnEnable()
         {
             if (receivers == null)
             {
+                if (linker == null)
+                    linker = new ReceiverLinker();
                 receivers = linker.Build(this);
                 receivers.SetRegistered(true);
                 Create();

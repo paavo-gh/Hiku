@@ -14,6 +14,8 @@ namespace Hiku
 
         protected override sealed void Init()
         {
+            if (linker == null)
+                linker = new ReceiverLinker();
             receivers = linker.Build(this);
             receivers.SetRegistered(true);
             base.Init();
