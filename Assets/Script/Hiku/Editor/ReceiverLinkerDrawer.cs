@@ -121,7 +121,7 @@ namespace Hiku.Editor
             
             IDataProviderObject provider = null;
             if (receiverType != null)
-                provider = ReceiverComponentBuilder.FindProviderObject(targetObject, receiverType);
+                provider = ReceiverComponentBuilder.FindProvider(targetObject, receiverType, ReceiverComponentBuilder.TypeDataProviderObject);
 
             if (provider != null)
             {
@@ -194,12 +194,12 @@ namespace Hiku.Editor
                         continue;
                     
                     //var providers = provider.GetProviders();
-                    var providers = Providers.Build(provider);
-                    if (providers != null)
+                    var providerTypes = Providers.GetProviderTypes(provider.GetType());
+                    if (providerTypes != null)
                     {
-                        foreach (var dataField in providers.All)
+                        foreach (var dataType in providerTypes)
                         {
-                            GetGetterMethods(new List<Type> { dataField.Type }, new List<string>(), linkedType, options);
+                            GetGetterMethods(new List<Type> { dataType }, new List<string>(), linkedType, options);
                         }
                     }
                 }

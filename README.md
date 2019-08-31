@@ -34,7 +34,7 @@ Provider components inherit from ProviderComponent and provide data through Data
 ```c#
 public class CharacterDataProvider : ProviderComponent
 {
-    DataField<CharacterData> characterData;
+    DataField<CharacterData> characterData = new DataField<CharacterData>();
 
     protected override void Create()
     {

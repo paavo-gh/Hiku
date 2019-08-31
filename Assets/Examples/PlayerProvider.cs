@@ -6,10 +6,10 @@ namespace Hiku.Examples
     public class PlayerProvider : ProviderComponent, IPlayerService, ITimeComponent
     {
         // Values of these DataFields are provided to all child objects expecting such a type
-        DataField<Player> player = null;
-        DataField<IPlayerService> playerService = null;
-        DataField<ITimeComponent> timeComponent = null;
-        DataField<DateTime> timerTest = null;
+        DataField<Player> player = new DataField<Player>();
+        DataField<IPlayerService> playerService = new DataField<IPlayerService>();
+        DataField<ITimeComponent> timeComponent = new DataField<ITimeComponent>();
+        DataField<DateTime> timerTest = new DataField<DateTime>();
 
         public DateTime CurrentTime => DateTime.UtcNow;
 

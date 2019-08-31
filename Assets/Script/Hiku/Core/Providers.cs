@@ -28,28 +28,61 @@ namespace Hiku.Core
 
             foreach (var field in obj.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance))
             {
-                if (typeof(Provider).IsAssignableFrom(field.FieldType))
+                if (ProviderBaseType.IsAssignableFrom(field.FieldType))
                 {
                     var value = field.GetValue(obj) as Provider;
                     if (value == null)
-                        field.SetValue(obj, value = CreateInstance(field.FieldType));
-                    providers.Add(value);
+                    {
+                        UnityEngine.Debug.LogError($"Provider {obj.GetType().GetFriendlyName()} field uninitialized: {field.Name}");
+                        //field.SetValue(obj, value = CreateInstance(field.FieldType));
+                    }
+                    else
+                        providers.Add(value);
                 }
             }
 
             return new Providers() { providers = providers };
         }
 
-        public static Provider CreateInstance(Type providerType)
+        /// <summary>
+        /// Finds add provided types by the given provider type. Used by editor utilities.
+        /// </summary>
+        public static IEnumerable<Type> GetProviderTypes(Type providerType)
         {
-            try
+            var types = new List<Type>();
+
+            foreach (var field in providerType.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance))
             {
-                return (Provider) Activator.CreateInstance(providerType);
+                var type = GetProvidedType(field.FieldType);
+                if (type != null)
+                    types.Add(type);
             }
-            catch (MissingMethodException)
+
+            return types;
+        }
+
+
+        static readonly Type ProviderBaseType = typeof(Provider);
+        static readonly Type ProviderBaseGenericType = typeof(Provider<>);
+
+        /// <summary>
+        /// Returns the provided type of the given provider:
+        ///   GetProviderType(typeof(Provider<T>)) == typeof(T)
+        ///   GetProviderType(typeof(DataField<T>)) == typeof(T)
+        /// </summary>
+        public static Type GetProvidedType(Type type)
+        {
+            if (ProviderBaseType.IsAssignableFrom(type))
             {
-                throw new MissingMethodException(providerType.GetFriendlyName() + " should have a zero parameter constructor");
+                do
+                {
+                    if (type.IsGenericType && type.GetGenericTypeDefinition() == ProviderBaseGenericType)
+                        return type.GetGenericArguments()[0];
+                    type = type.BaseType;
+                }
+                while (type != null);
             }
+            return null;
         }
     }
 }

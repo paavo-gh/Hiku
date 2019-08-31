@@ -14,8 +14,8 @@ namespace Hiku
             if (providers == null)
             {
                 initializing = true;
-                providers = Providers.Build(this);
                 Init();
+                providers = Providers.Build(this);
                 initializing = false;
             }
             if (initializing)

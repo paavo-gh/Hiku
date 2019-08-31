@@ -43,9 +43,11 @@ namespace Hiku.Core
 
         public void CreateReceiver(MonoBehaviour target, ReceiverBuilder receivers)
         {
-            var provider = ReceiverComponentBuilder.FindProvider(target, type);
+            var provider = ReceiverComponentBuilder.FindProvider(target, type, ReceiverComponentBuilder.TypeProvider);
             if (provider != null)
                 DelegateReceiverCreator.Create(provider, this, target, receivers);
+            else
+                Debug.LogError($"Unable to find {nameof(Provider)}<{type.GetFriendlyName()}> for {target.GetType().Name} named '{target.name}'", target);
         }
 
         public Action<T> CreateDelegate<T>(object target, ReceiverBuilder receivers)

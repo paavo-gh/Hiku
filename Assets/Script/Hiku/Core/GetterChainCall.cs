@@ -58,10 +58,8 @@ namespace Hiku.Core
         public static Type GetMethodReturnType(MethodInfo method)
         {
             var type = method.ReturnType;
-            if (typeof(Provider).IsAssignableFrom(type))
-                type = Providers.CreateInstance(type).Type;
-                //type = type.GenericTypeArguments[0];
-            return type;
+            var providedType = Providers.GetProvidedType(type);
+            return providedType ?? type;
         }
     }
 

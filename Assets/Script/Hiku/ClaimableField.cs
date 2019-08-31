@@ -22,15 +22,11 @@ namespace Hiku
         }
     }
 
-    public class ClaimableField<T> : Provider<ClaimableData<T>>, Provider
+    public class ClaimableField<T> : Provider<ClaimableData<T>>
     {
         readonly Func<T> Getter;
         readonly Action<T> Setter;
         ClaimableData<T> data;
-
-        public ClaimableField()
-        {
-        }
 
         public ClaimableField(Func<T> getter, Action<T> setter)
         {
@@ -39,11 +35,9 @@ namespace Hiku
             data = new ClaimableData<T>(Getter(), Getter());
         }
 
-        Type Provider.Type => typeof(ClaimableData<T>);
-
         // Events do not work with different parameter types
         private Listeners<ClaimableData<T>> listeners = new Listeners<ClaimableData<T>>();
-        public event Action<ClaimableData<T>> Listeners
+        public override event Action<ClaimableData<T>> Listeners
         {
             add
             {
@@ -52,9 +46,6 @@ namespace Hiku
             }
             remove => listeners.Remove(value);
         }
-
-        void Provider.Register(ProviderListener providerListener)
-            => providerListener.RegisterWith(this);
         
         public T Value
         {

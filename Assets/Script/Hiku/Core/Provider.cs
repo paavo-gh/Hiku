@@ -20,9 +20,13 @@ namespace Hiku.Core
     /// <summary>
     /// Provides data of type T to it's listeners.
     /// </summary>
-    public interface Provider<out T>
+    public abstract class Provider<T> : Provider
     {
-        event Action<T> Listeners;
+        public abstract event Action<T> Listeners;
+
+        Type Provider.Type => typeof(T);
+
+        void Provider.Register(ProviderListener providerListener) => providerListener.RegisterWith(this);
     }
 
     public interface ProviderListener

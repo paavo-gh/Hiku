@@ -6,14 +6,18 @@ namespace Hiku
     /// <summary>
     /// Stores the data and only notifies the listeners when the data changes.
     /// </summary>
-    public class DataField<T> : Provider<T>, Provider
+    public class DataField<T> : Provider<T>
     {
         T value;
         bool initialized;
 
+        public DataField() {}
+
+        public DataField(T initialValue) => Set(initialValue);
+
         // Events do not work with different parameter types
         private Listeners<T> listeners = new Listeners<T>();
-        public event Action<T> Listeners
+        public override event Action<T> Listeners
         {
             add
             {
@@ -34,10 +38,5 @@ namespace Hiku
         }
 
         public T Get() => value;
-
-        Type Provider.Type => typeof(T);
-
-        void Provider.Register(ProviderListener providerListener)
-            => providerListener.RegisterWith(this);
     }
 }

@@ -15,15 +15,15 @@ namespace Hiku.Editor
         {
             EditorGUI.BeginProperty(position, label, property);
 
-            var providers = Providers.Build(property.serializedObject.targetObject);
-            int count = providers.All.Count();
+            var providerTypes = Providers.GetProviderTypes(property.serializedObject.targetObject.GetType());
+            int count = providerTypes.Count();
             if (count > 0)
             {
                 position = EditorGUI.PrefixLabel(position, GUIUtility.GetControlID(FocusType.Passive), new GUIContent("Provides"));
                 
                 EditorGUI.LabelField(
                     new Rect(position.x, position.y, position.width, count * EditorGUIUtility.singleLineHeight),
-                    string.Join("\n", providers.All.Select(p => p.Type.GetFriendlyName()))
+                    string.Join("\n", providerTypes.Select(type => type.GetFriendlyName()))
                 );
             }
 
@@ -32,7 +32,7 @@ namespace Hiku.Editor
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            return Providers.Build(property.serializedObject.targetObject).All.Count() * EditorGUIUtility.singleLineHeight;
+            return Providers.GetProviderTypes(property.serializedObject.targetObject.GetType()).Count() * EditorGUIUtility.singleLineHeight;
         }
     }
 }

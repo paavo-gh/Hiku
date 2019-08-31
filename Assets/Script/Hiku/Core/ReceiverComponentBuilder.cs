@@ -1,44 +1,26 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Hiku.Core
 {
     public static class ReceiverComponentBuilder
     {
-        public static Provider FindProvider(MonoBehaviour owner, Type type)
+        public static Provider TypeProvider(IDataProviderObject obj, Func<Type, bool> typeFilter)
         {
-            var providerList = new List<MonoBehaviour>();
-            for (var t = owner.transform; t != null; t = t.parent)
+            foreach (var provider in obj.GetProviders().All)
             {
-                t.GetComponents(providerList);
-                for (int i = 0; i < providerList.Count; i++)
-                {
-                    // To avoid potential loops, disallow inherting from components 
-                    // that are below the owner. 
-                    if (object.ReferenceEquals(providerList[i], owner))
-                        break;
-                    
-                    var obj = providerList[i] as IDataProviderObject;
-                    if (obj != null)
-                    {
-                        foreach (var provider in obj.GetProviders().All)
-                        {
-                            if (type.IsAssignableFrom(provider.Type))
-                                return provider;
-                        }
-                    }
-                }
-                providerList.Clear();
+                if (typeFilter(provider.Type))
+                    return provider;
             }
-            Debug.LogError($"Unable to find {nameof(Provider)}<{type.GetFriendlyName()}> for {owner.GetType().Name} named '{owner.name}'", owner);
             return null;
         }
 
-        /// <summary>
-        /// Finds provider object without triggering any in-game logic in editor.
-        /// </summary>
-        public static IDataProviderObject FindProviderObject(MonoBehaviour owner, Type type)
+        public static IDataProviderObject TypeDataProviderObject(IDataProviderObject obj, Func<Type, bool> typeFilter)
+            => Providers.GetProviderTypes(obj.GetType()).Any(typeFilter) ? obj : null;
+
+        public static T FindProvider<T>(MonoBehaviour owner, Type type, Func<IDataProviderObject, Func<Type, bool>, T> filter)
         {
             var providerList = new List<MonoBehaviour>();
             for (var t = owner.transform; t != null; t = t.parent)
@@ -54,16 +36,14 @@ namespace Hiku.Core
                     var obj = providerList[i] as IDataProviderObject;
                     if (obj != null)
                     {
-                        foreach (var provider in Providers.Build(obj).All)
-                        {
-                            if (type.IsAssignableFrom(provider.Type))
-                                return obj;
-                        }
+                        var result = filter(obj, type.IsAssignableFrom);
+                        if (result != null)
+                            return result;
                     }
                 }
                 providerList.Clear();
             }
-            return null;
+            return default(T);
         }
     }
 }
