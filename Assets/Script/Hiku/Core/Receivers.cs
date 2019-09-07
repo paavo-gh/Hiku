@@ -65,12 +65,10 @@ namespace Hiku.Core
                 if (attribute != null)
                 {
                     var parameters = method.GetParameters();
-                    if (parameters.Length != 1)
-                    {
+                    if (parameters.Length == 1)
+                        list.Add(new ReceiverMethod(method, parameters[0].ParameterType, attribute));
+                    else
                         Debug.LogError($"[{source.GetType().Name}] Receiver method {method.Name} has invalid number of parameters ({parameters.Length})");
-                        return null;
-                    }
-                    list.Add(new ReceiverMethod(method, parameters[0].ParameterType, attribute));
                 }
             }
 

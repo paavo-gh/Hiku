@@ -58,7 +58,7 @@ namespace Hiku.Core
         public static Type GetMethodReturnType(MethodInfo method)
         {
             var type = method.ReturnType;
-            var providedType = Providers.GetProvidedType(type);
+            var providedType = ProvidersCreator.GetProvidedType(type);
             return providedType ?? type;
         }
     }

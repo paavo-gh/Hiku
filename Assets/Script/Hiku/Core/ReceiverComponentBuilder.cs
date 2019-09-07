@@ -18,7 +18,7 @@ namespace Hiku.Core
         }
 
         public static IDataProviderObject TypeDataProviderObject(IDataProviderObject obj, Func<Type, bool> typeFilter)
-            => Providers.GetProviderTypes(obj.GetType()).Any(typeFilter) ? obj : null;
+            => ProvidersCreator.GetProviderTypes(obj.GetType()).Any(typeFilter) ? obj : null;
 
         public static T FindProvider<T>(MonoBehaviour owner, Type type, Func<IDataProviderObject, Func<Type, bool>, T> filter)
         {

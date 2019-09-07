@@ -15,7 +15,7 @@ namespace Hiku.Editor
         {
             EditorGUI.BeginProperty(position, label, property);
 
-            var providerTypes = Providers.GetProviderTypes(property.serializedObject.targetObject.GetType());
+            var providerTypes = ProvidersCreator.GetProviderTypes(property.serializedObject.targetObject.GetType());
             int count = providerTypes.Count();
             if (count > 0)
             {
@@ -32,7 +32,7 @@ namespace Hiku.Editor
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            return Providers.GetProviderTypes(property.serializedObject.targetObject.GetType()).Count() * EditorGUIUtility.singleLineHeight;
+            return ProvidersCreator.GetProviderTypes(property.serializedObject.targetObject.GetType()).Count() * EditorGUIUtility.singleLineHeight;
         }
     }
 }

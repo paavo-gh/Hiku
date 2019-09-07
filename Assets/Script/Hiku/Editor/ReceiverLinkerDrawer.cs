@@ -194,7 +194,7 @@ namespace Hiku.Editor
                         continue;
                     
                     //var providers = provider.GetProviders();
-                    var providerTypes = Providers.GetProviderTypes(provider.GetType());
+                    var providerTypes = ProvidersCreator.GetProviderTypes(provider.GetType());
                     if (providerTypes != null)
                     {
                         foreach (var dataType in providerTypes)

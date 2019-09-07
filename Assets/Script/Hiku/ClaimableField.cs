@@ -22,6 +22,9 @@ namespace Hiku
         }
     }
 
+    /// <summary>
+    /// Field type that keeps the old value until UI claims it.
+    /// </summary>
     public class ClaimableField<T> : Provider<ClaimableData<T>>
     {
         readonly Func<T> Getter;
