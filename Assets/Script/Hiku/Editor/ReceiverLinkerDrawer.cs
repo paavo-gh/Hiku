@@ -16,6 +16,9 @@ namespace Hiku.Editor
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            if (property.serializedObject.isEditingMultipleObjects)
+                return;
+
             EditorGUI.BeginProperty(position, label, property);
 
             var linker = new ReceiverLinker();
@@ -50,7 +53,7 @@ namespace Hiku.Editor
                     var obj = members.GetArrayElementAtIndex(size);
                     SaveObject(obj, linkerItem);
                 }
-                if (linkerItem.ReceiverType != ReceiverLinker.IngoreReceiver)
+                if (linkerItem.ReceiverType != ReceiverLinker.IgnoreReceiver)
                     DrawProviderPreview(position, linkerItem, method, option.ReceiverType, targetObject);
                 position.y += EditorGUIUtility.singleLineHeight;
             }
@@ -88,7 +91,7 @@ namespace Hiku.Editor
             var options = new List<PopupOption>
             {
                 // None-option
-                new PopupOption(receiverTypeName: ReceiverLinker.IngoreReceiver),
+                new PopupOption(receiverTypeName: ReceiverLinker.IgnoreReceiver),
                 // Automatic option where the receiver type is the parameter type
                 new PopupOption(method.Type, receiverTypeName: "")
             };
@@ -271,6 +274,8 @@ namespace Hiku.Editor
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
+            if (property.serializedObject.isEditingMultipleObjects)
+                return 0;
             return 2 * EditorGUIUtility.singleLineHeight * ReceiverMethod.GetAll(property.serializedObject.targetObject).Count;
         }
     }

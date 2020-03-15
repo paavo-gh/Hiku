@@ -18,7 +18,7 @@ namespace Hiku.Core
     [Serializable]
     public class ReceiverLinker
     {
-        public const string IngoreReceiver = "null";
+        public const string IgnoreReceiver = "null";
 
         /// <summary>
         /// Building the list of receivers from methods tagged with [Receive] attribute 
@@ -51,7 +51,7 @@ namespace Hiku.Core
                 else
                 {
                     // Set manually
-                    if (member.ReceiverType == IngoreReceiver)
+                    if (member.ReceiverType == IgnoreReceiver)
                         continue;
                     
                     // Subtype of the receiver method's parameter type
