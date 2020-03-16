@@ -64,7 +64,8 @@ If we wanted to have the TextDisplay also change its data every time a character
 [Receivable]
 public class CharacterData
 {
-    public DataField<string> Name { get; private set; }
+    DataField<string> name = new DataField<string>();
+    public Provider<string> Name => name;
 }
 ```
 

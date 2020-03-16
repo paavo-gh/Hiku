@@ -17,18 +17,6 @@ namespace Hiku.Core
         void Register(ProviderListener providerListener);
     }
 
-    /// <summary>
-    /// Provides data of type T to it's listeners.
-    /// </summary>
-    public abstract class Provider<T> : Provider
-    {
-        public abstract event Action<T> Listeners;
-
-        Type Provider.Type => typeof(T);
-
-        void Provider.Register(ProviderListener providerListener) => providerListener.RegisterWith(this);
-    }
-
     public interface ProviderListener
     {
         void RegisterWith<T>(Provider<T> provider);

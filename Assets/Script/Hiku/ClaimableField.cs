@@ -62,5 +62,7 @@ namespace Hiku
         }
 
         public T ClaimedValue => data.ClaimedValue;
+
+        public override ClaimableData<T> Get() => data;
     }
 }

@@ -18,6 +18,6 @@ namespace Hiku
             remove {}
         }
 
-        public T Get() => value;
+        public override T Get() => value;
     }
 }
