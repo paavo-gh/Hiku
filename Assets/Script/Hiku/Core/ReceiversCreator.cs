@@ -117,9 +117,7 @@ namespace Hiku.Core
 
         public void Register(Provider<T> provider)
         {
-            if (this.provider != null)
-                this.provider.Listeners -= ValueChanged;
-
+            Dispose();
             this.provider = provider;
             provider.Listeners += ValueChanged;
         }
@@ -145,6 +143,11 @@ namespace Hiku.Core
             }
         }
 
-        void DataReceiver.Dispose() => provider.Listeners -= ValueChanged;
+        public void Dispose()
+        {
+            if (this.provider != null)
+                this.provider.Listeners -= ValueChanged;
+            this.provider = null;
+        }
     }
 }

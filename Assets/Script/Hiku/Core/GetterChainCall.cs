@@ -39,16 +39,15 @@ namespace Hiku.Core
         /// </summary>
         public Action<T> Wrap<T>(Delegate d, ReceiverBuilder receivers)
         {
-            IGetterMethod getter = new DelegateGetter(d);
+            IDelegateProvider getter = new DelegateGetter(d);
             for (int i = accessors.Length - 1; i >= 0; i--)
             {
-                //UnityEngine.Debug.Log("PATH " + path[i] + ", " + accessors[i].Method.ReturnType.GetFriendlyName());
                 if (typeof(Provider).IsAssignableFrom(accessors[i].Method.ReturnType))
                     getter = new ProviderGetter(accessors[i], getter, receivers);
                 else
                     getter = new ReflectionGetterMethod(accessors[i], getter);
             }
-            return getter.GetDelegate<T>();
+            return getter.GetTypedDelegate<T>();
         }
 
         /// <summary>
@@ -63,45 +62,61 @@ namespace Hiku.Core
         }
     }
 
-    public interface IGetterMethod
+    public interface IDelegateProvider
     {
         Delegate Delegate { get; }
+    }
+
+    public interface IDelegateProviderGeneric
+    {
         Action<T> GetDelegate<T>();
     }
 
-    public class DelegateGetter : IGetterMethod
+    public static class IDelegateProviderExt
     {
-        Delegate d;
+        public static Action<T> GetTypedDelegate<T>(this IDelegateProvider getter)
+        {
+            if (getter is IDelegateProviderGeneric m)
+                try { return m.GetDelegate<T>(); }
+#pragma warning disable 0618
+                catch (ExecutionEngineException e)
+#pragma warning restore 0618
+                {
+                    // Check AOT code generation logic
+                    UnityEngine.Debug.LogError("Handled: " + e.Message + e.StackTrace);
+                }
+            return (Action<T>) getter.Delegate;
+        }
+    }
 
-        public DelegateGetter(Delegate d) => this.d = d;
+    public class DelegateGetter : IDelegateProvider
+    {
+        public Delegate Delegate { get; private set; }
 
-        public Delegate Delegate => d;
-
-        public Action<T> GetDelegate<T>() => (Action<T>) d;
+        public DelegateGetter(Delegate d) => this.Delegate = d;
     }
 
     /// <summary>
     /// Normal getter methods result in dynamic invocations as the types are not known.
     /// </summary>
-    public class ReflectionGetterMethod : IGetterMethod
+    public class ReflectionGetterMethod : IDelegateProvider
     {
         Delegate getter;
-        IGetterMethod next;
+        IDelegateProvider next;
 
-        public ReflectionGetterMethod(Delegate getter, IGetterMethod next)
+        public ReflectionGetterMethod(Delegate getter, IDelegateProvider next)
         {
             this.next = next;
             this.getter = getter;
+            this.Delegate = (Action<object>) Apply;
         }
 
-        private void Apply<T>(T target)
+        private void Apply(object target)
         {
             next.Delegate.DynamicInvoke(target == null ? null : getter.DynamicInvoke(target));
         }
 
-        public Delegate Delegate => (Action<object>) Apply;
-
-        public Action<T> GetDelegate<T>() => Apply;
+        public Delegate Delegate { get; private set; }
     }
 
     /// <summary>
@@ -109,37 +124,38 @@ namespace Hiku.Core
     /// If all getters in a chain are types of Provider, there is no 
     /// need for dynamic invocation.
     /// </summary>
-    public class ProviderGetter : IGetterMethod, ProviderListener
+    public class ProviderGetter : IDelegateProviderGeneric, IDelegateProvider, ProviderListener
     {
         Delegate getter;
-        IGetterMethod next;
+        IDelegateProvider next;
         DataReceiver dataReceiver;
         ReceiverBuilder receivers;
 
-        public ProviderGetter(Delegate getter, IGetterMethod next, ReceiverBuilder receivers)
+        public ProviderGetter(Delegate getter, IDelegateProvider next, ReceiverBuilder receivers)
         {
             this.getter = getter;
             this.next = next;
             this.receivers = receivers;
+            this.Delegate = (Action<object>) Apply;
         }
 
         private void Apply(object target)
         {
-            Provider provider = null;
+            dataReceiver?.Dispose();
             if (target != null)
-                provider = getter.DynamicInvoke(target) as Provider;
-            if (provider != null)
-                provider.Register(this);
-            else
-                dataReceiver?.Dispose();
+                (getter.DynamicInvoke(target) as Provider)?.Register(this);
         }
 
-        public Delegate Delegate => (Action<object>) Apply;
+        public Delegate Delegate { get; private set; }
 
         public Action<T> GetDelegate<T>()
         {
             var method = (Func<T, Provider>) getter;
-            return target => method.Invoke(target)?.Register(this);
+            return target => {
+                dataReceiver?.Dispose();
+                if (target != null)
+                    method.Invoke(target)?.Register(this);
+            };
         }
 
         void ProviderListener.RegisterWith<T>(Provider<T> provider)
@@ -147,7 +163,7 @@ namespace Hiku.Core
             var delegateReceiver = dataReceiver as DelegateReceiver<T>;
             if (delegateReceiver == null)
             {
-                delegateReceiver = new DelegateReceiver<T>(next.GetDelegate<T>());
+                delegateReceiver = new DelegateReceiver<T>(next.GetTypedDelegate<T>());
                 receivers.Receive(delegateReceiver);
             }
             delegateReceiver.Register(provider);
