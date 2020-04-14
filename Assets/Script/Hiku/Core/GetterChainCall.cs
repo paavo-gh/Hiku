@@ -83,7 +83,7 @@ namespace Hiku.Core
 #pragma warning restore 0618
                 {
                     // Check AOT code generation logic
-                    UnityEngine.Debug.LogError("Handled: " + e.Message + e.StackTrace);
+                    UnityEngine.Debug.LogError("Fallback to dynamic invocation: " + e.Message + e.StackTrace);
                 }
             return (Action<T>) getter.Delegate;
         }

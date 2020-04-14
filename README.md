@@ -106,6 +106,6 @@ protected override void Disable()
 
 - Reflection is used when constructing the receiver and provider components. Receivable fields that are not DataFields will result in dynamic invocation when data changes. If only DataFields are used, then all the types are known during compile-time and no reflection is needed in the process.
 
-- If you need to ensure that data is received in a certain order when a component is created, you can use [Receive(Order=1)]. Lower order receivers will receive their data first.
+- Initial data is received in the order receiving methods are declared.
 
 - Changes to the object hierarchy do not affect the receiver's data source after the receiver has been created. This holds even if the receiver is no longer a child of the provider. This behavior may change in the future.

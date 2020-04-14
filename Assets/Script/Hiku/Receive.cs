@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Hiku
 {
@@ -8,11 +9,13 @@ namespace Hiku
     public class Receive : UnityEngine.Scripting.PreserveAttribute
     {
         /// <summary>
-        /// Specifies the order in which data should be 
-        /// received when the component is initialized.
-        /// Higher will receive later. Defaults to zero.
+        /// Specifies the order in which data will be received when the component is initialized.
+        /// Depends on the order receiving methods are declared.
         /// </summary>
-        public int Order { get; set; }
+        public int Order { get; private set; }
+
+        public Receive([CallerLineNumber] int order = 0)
+            => Order = order;
     }
 
     /// <summary>
